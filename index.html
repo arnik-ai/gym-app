@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>مینی‌اپ باشگاه</title>
+<!-- Telegram Mini App bridge: must load before the app script. -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,800&family=Vazirmatn:wght@400;600;800;900&display=swap">
+<style>
+/* Layout: one small, airy column; four big pastel tiles; everything else lives in sheets.
+   Deliberately one light, pastel look: it stays light even when Telegram is in dark mode. */
+:root {
+  color-scheme: light;
+  --bg1: #FFFFFF; --bg2: #FFFFFF; --bg3: #FFFFFF; --bg4: #FFFFFF;
+  --glass: #FFFFFF; --glass-line: #E9E4F7;
+  --ink: #2A2D43; --ink2: #7B7F97;
+  --mint-a: #EAFBF7; --mint-b: #D2F4EC; --mint-d: #17806F; --mint-line: #ABE7DA;
+  --lilac-a: #F4F0FF; --lilac-b: #E4DBFF; --lilac-d: #6A4FD0; --lilac-line: #CFC0FF;
+  --peach-a: #EEF6FF; --peach-b: #D6E9FF; --peach-d: #2F6FC4; --peach-line: #B3D4FF;
+  --sky-a: #FFF9E3; --sky-b: #FFEFBF; --sky-d: #8F6200; --sky-line: #FFDC85;
+  --mint: var(--mint-b); --lilac: var(--lilac-b); --peach: var(--peach-b); --sky: var(--sky-b);
+  --brand: #7C5CF0; --brand-2: #5B8DEF;
+  --err: #D44A3F;
+  --shadow: 0 6px 18px rgba(106, 79, 208, 0.08);
+  --font: "Vazirmatn", "Segoe UI", Tahoma, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.65; direction: rtl;
+  background: var(--bg1);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--lilac-d); outline-offset: 2px; }
+.app { max-width: 460px; margin: 0 auto; padding-block: 14px 110px; }
+.glass { background: var(--glass); border: 1.5px solid var(--glass-line); border-radius: 22px; box-shadow: var(--shadow); }
+.hint { color: var(--ink2); font-size: 14px; }
+.num { font-variant-numeric: tabular-nums; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; gap: 10px; align-items: center; }
+
+/* top */
+.top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.top h1 { margin: 0; font-size: 19px; font-weight: 900; flex: 1; min-width: 0; }
+.round { width: 42px; height: 42px; border-radius: 15px; border: 1px solid var(--glass-line); background: var(--glass); display: grid; place-items: center; flex-shrink: 0; box-shadow: var(--shadow); }
+
+/* home */
+.hero { display: flex; align-items: center; gap: 12px; padding: 16px 18px; background: linear-gradient(135deg, #FFFFFF 40%, var(--lilac-a)); border-color: var(--lilac-line); }
+.welcome { font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 800; font-size: 36px; line-height: 1.1; direction: ltr; text-align: right;
+  background: linear-gradient(90deg, #4FA3F7, #7C5CF0); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 4px; }
+.mascot { width: 62px; height: 62px; flex-shrink: 0; transform-origin: 50% 100%; animation: sway 3.2s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+.hero b { font-size: 19px; font-weight: 900; display: block; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 800; background: var(--peach-a); color: var(--peach-d); border: 1.5px solid var(--peach-line); }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.tile {
+  border: 0; border-radius: 26px; padding: 16px 14px 14px; text-align: start; display: flex; flex-direction: column; gap: 4px;
+  min-height: 150px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+  transition: transform 0.18s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.tile:active { transform: scale(0.95); }
+.tile svg { width: 60px; height: 60px; margin-bottom: auto; filter: drop-shadow(0 4px 6px rgba(60, 40, 120, 0.12)); }
+.tile b { font-size: 18.5px; font-weight: 900; }
+.tile span { font-size: 13.5px; font-weight: 700; opacity: 0.85; }
+.t-mint { background: linear-gradient(160deg, var(--mint-a), var(--mint-b)); color: var(--mint-d); border: 2px solid var(--mint-line); }
+.t-lilac { background: linear-gradient(160deg, var(--lilac-a), var(--lilac-b)); color: var(--lilac-d); border: 2px solid var(--lilac-line); }
+.t-peach { background: linear-gradient(160deg, var(--peach-a), var(--peach-b)); color: var(--peach-d); border: 2px solid var(--peach-line); }
+.t-sky { background: linear-gradient(160deg, var(--sky-a), var(--sky-b)); color: var(--sky-d); border: 2px solid var(--sky-line); }
+.tile { box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
+.tile.t-mint, .tile.t-lilac, .tile.t-peach, .tile.t-sky { border-width: 2px; }
+.mini { display: flex; gap: 10px; margin-top: 12px; }
+.mini button { flex: 1; border: 2px solid var(--peach-line); background: var(--glass); border-radius: 18px; padding: 12px; font-weight: 800; display: flex; align-items: center; gap: 8px; justify-content: center; box-shadow: var(--shadow); font-size: 13.5px; }
+
+/* lists, chips, forms */
+.item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; width: 100%; text-align: start; background: transparent; border-top: 1px solid var(--glass-line); }
+.item:first-child { border-top: 0; }
+.item .dot { width: 38px; height: 38px; border-radius: 13px; display: grid; place-items: center; font-weight: 900; font-size: 13px; flex-shrink: 0; }
+.item b { display: block; font-size: 16px; font-weight: 800; }
+.item .price { margin-inline-start: auto; font-weight: 900; font-size: 13.5px; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1.5px solid var(--glass-line); background: var(--glass); border-radius: 999px; padding: 9px 16px; min-height: 44px; font-weight: 800; font-size: 14.5px; }
+.chip[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+.input { width: 100%; border: 1.5px solid var(--glass-line); background: #FFFFFF; border-radius: 16px; padding: 13px 14px; min-height: 50px; outline: none; }
+.input:focus { border-color: var(--brand); }
+.label { font-weight: 800; font-size: 13px; margin-bottom: 6px; display: block; }
+.err { color: var(--err); font-size: 12.5px; font-weight: 800; }
+.btn { border: 0; border-radius: 16px; padding: 12px 14px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; }
+.btn.soft { background: #FFFFFF; color: var(--ink); border: 1.5px solid var(--glass-line); }
+.seg { display: flex; padding: 4px; gap: 4px; border-radius: 16px; background: var(--lilac-a); border: 1.5px solid var(--lilac-line); }
+.seg button { flex: 1; border: 0; border-radius: 12px; padding: 10px; font-weight: 800; background: transparent; color: var(--ink2); }
+.seg button[aria-pressed="true"] { background: #FFFFFF; color: var(--lilac-d); box-shadow: 0 2px 8px rgba(106, 79, 208, 0.15); }
+select.input { appearance: none; -webkit-appearance: none; padding-inline-start: 38px;
+  background: #FFFFFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237C5CF0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat left 14px center; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* calendar: 2026 booking style; squircle days with the free seats under each number */
+.datebtn { display: flex; align-items: center; gap: 12px; text-align: start; font-weight: 800; min-height: 62px; padding-block: 9px; }
+.datebtn .ic { width: 40px; height: 40px; border-radius: 13px; background: var(--lilac-a); border: 1.5px solid var(--lilac-line); display: grid; place-items: center; flex-shrink: 0; }
+.datebtn .ic svg { width: 22px; height: 22px; }
+.datebtn .v { display: flex; flex-direction: column; line-height: 1.35; min-width: 0; }
+.datebtn .v small { font-size: 12px; font-weight: 700; color: var(--ink2); }
+.datebtn .ph { color: var(--ink2); font-weight: 700; }
+.datebtn .chev { margin-inline-start: auto; color: var(--lilac-d); display: grid; }
+.cal-title { text-align: center; margin: 0 0 12px; }
+.cal-title b { display: block; font-size: 18px; font-weight: 900; }
+.calcard { background: #FFFFFF; border: 1.5px solid var(--glass-line); border-radius: 24px; padding: 12px 8px 10px; box-shadow: var(--shadow); overflow: hidden; }
+.cal-head { display: flex; align-items: center; gap: 10px; margin: 0 4px 6px; }
+.cal-head .m { flex: 1; text-align: center; line-height: 1.25; }
+.cal-head .m b { display: block; font-size: 20px; font-weight: 900; }
+.cal-head .m span { font-size: 12.5px; font-weight: 700; color: var(--ink2); }
+.navb { width: 40px; height: 40px; border-radius: 14px; border: 1.5px solid var(--lilac-line); background: var(--lilac-a); color: var(--lilac-d); display: grid; place-items: center; padding: 0; }
+.navb svg { width: 18px; height: 18px; }
+.navb:disabled { opacity: 0.35; }
+.flip svg { transform: scaleX(-1); }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal .wd { text-align: center; font-size: 12px; font-weight: 800; color: var(--ink2); padding: 6px 0 8px; margin-bottom: 4px; border-bottom: 1.5px dashed var(--glass-line); }
+.cal .wd.fri { color: #E0706A; }
+.cd { position: relative; height: 52px; margin: 2px; padding: 0; border: 1.5px solid transparent; border-radius: 14px; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--ink); transition: transform 0.15s, background 0.2s; }
+.cd .n { font-size: 16px; font-weight: 900; line-height: 1.25; }
+.cd .s { font-size: 9.5px; font-weight: 800; line-height: 1.2; color: var(--mint-d); }
+.cd:disabled { cursor: default; }
+.cd:disabled .n { color: #CFCEDB; }
+.cd.fri:disabled .n { color: #F2BEBA; }
+.cd.av { background: #FFFFFF; border-color: var(--glass-line); }
+.cd.av:active { transform: scale(0.94); }
+.cd.low .s { color: #D9822B; }
+.cd.full { background: #F6F5FA; }
+.cd.full .n { color: #B9B8C8; text-decoration: line-through; }
+.cd.full .s { color: #B9B8C8; }
+.cd.pat { background: var(--lilac-a); border-color: var(--lilac-line); }
+.cd.pat .n, .cd.pat .s { color: var(--lilac-d); }
+.cd.today { border: 2px solid #FFDC85; }
+.cd.on { background: linear-gradient(135deg, var(--brand), var(--brand-2)); border-color: transparent; box-shadow: 0 8px 18px rgba(124, 92, 240, 0.35); transform: scale(1.04); }
+.cd.on .n, .cd.on .s { color: #FFFFFF; }
+.cal.in-next { animation: inNext 0.28s ease; }
+.cal.in-prev { animation: inPrev 0.28s ease; }
+@keyframes inNext { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@keyframes inPrev { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+.legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; padding-top: 10px; border-top: 1.5px dashed var(--glass-line); font-size: 12px; font-weight: 700; color: var(--ink2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 12px; height: 12px; border-radius: 4px; display: inline-block; border: 1.5px solid var(--glass-line); background: #FFFFFF; }
+.lg.full { background: #ECEBF3; border-color: #ECEBF3; }
+.lg.today { border: 2px solid #FFDC85; }
+.lg.on { background: linear-gradient(135deg, var(--brand), var(--brand-2)); border-color: transparent; }
+.lg.pat { background: var(--lilac-a); border-color: var(--lilac-line); }
+.slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.slot { position: relative; border: 1.5px solid var(--glass-line); background: #FFFFFF; border-radius: 18px; display: flex; flex-direction: column; align-items: center; transition: transform 0.15s, box-shadow 0.2s; }
+.slot { padding: 12px 4px 10px; gap: 1px; }
+.slot svg { width: 32px; height: 32px; margin-bottom: 4px; }
+.slot b { font-size: 15px; font-weight: 900; }
+.slot span { font-size: 11.5px; font-weight: 700; color: var(--ink2); white-space: nowrap; }
+.slot.on { border-color: var(--brand); background: var(--lilac-a); box-shadow: 0 6px 16px rgba(124, 92, 240, 0.18); }
+.slot.on span { color: var(--lilac-d); }
+.slot:active { transform: scale(0.96); }
+.tk { position: absolute; top: -6px; inset-inline-end: -6px; width: 20px; height: 20px; border-radius: 50%; background: #2DBE8C; border: 2px solid #FFFFFF; display: grid; place-items: center; animation: pop 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.btn:disabled { opacity: 0.5; }
+
+/* drawers: crowded parts fold away */
+.acc { background: #FFFFFF; border: 1.5px solid var(--glass-line); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
+.acc[open] { border-color: var(--lilac-line); box-shadow: 0 10px 26px rgba(106, 79, 208, 0.12); }
+.acc > summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 14px; cursor: pointer; min-height: 66px; }
+.acc > summary::-webkit-details-marker { display: none; }
+.acc > summary b { font-size: 16.5px; font-weight: 900; }
+.acc[open] > summary { background: linear-gradient(180deg, var(--lilac-a), #FFFFFF); border-bottom: 1.5px dashed var(--glass-line); }
+.acc .badge { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; flex-shrink: 0; }
+.acc .badge svg { width: 26px; height: 26px; }
+.acc .cnt { margin-inline-start: auto; font-size: 12px; font-weight: 800; color: var(--lilac-d); background: var(--lilac-a); border: 1.5px solid var(--lilac-line); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.acc .chev { margin-inline-start: auto; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #FFFFFF; border: 1.5px solid var(--lilac-line); color: var(--lilac-d); transition: transform 0.25s, background 0.2s; flex-shrink: 0; }
+.acc .cnt + .chev { margin-inline-start: 0; }
+.acc[open] .chev { transform: rotate(180deg); background: var(--brand); border-color: var(--brand); color: #FFFFFF; }
+.acc[open] > :not(summary) { animation: accIn 0.25s ease; }
+@keyframes accIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.acc .item { border-top: 1.5px dashed var(--glass-line); }
+.acc .item:first-child { border-top: 0; }
+.acc .item .price { background: var(--mint-a); border: 1.5px solid var(--mint-line); color: var(--mint-d); padding: 3px 10px; border-radius: 999px; font-size: 12.5px; }
+.faq { padding: 4px; }
+.faq details { border-radius: 16px; transition: background 0.2s; }
+.faq details + details { margin-top: 2px; }
+.faq details[open] { background: var(--lilac-a); }
+.faq summary { list-style: none; display: flex; gap: 10px; align-items: center; padding: 11px 10px; font-weight: 800; cursor: pointer; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq .qm { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; background: var(--sky-a); border: 1.5px solid var(--sky-line); color: var(--sky-d); font-weight: 900; }
+.faq details[open] .qm { background: var(--brand); border-color: var(--brand); color: #FFFFFF; }
+.faq summary .chev { margin-inline-start: auto; color: var(--lilac-d); transition: transform 0.25s; display: grid; }
+.faq details[open] summary .chev { transform: rotate(180deg); }
+.faq .ans { margin: 0 10px 10px; padding: 12px 14px; background: #FFFFFF; border-radius: 14px; border-inline-start: 3px solid var(--brand); animation: accIn 0.25s ease; }
+/* course picker sheet: replaces the phone's plain dropdown */
+.pick-h { font-size: 13px; font-weight: 800; color: var(--ink2); margin: 0 6px 6px; }
+.picks { padding: 4px; }
+.pick { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px; border: 0; background: transparent; border-radius: 16px; text-align: start; transition: background 0.2s, transform 0.15s; }
+.pick + .pick { margin-top: 2px; }
+.pick .dot, .datebtn .dot { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; font-weight: 900; flex-shrink: 0; }
+.pick .v { display: flex; flex-direction: column; line-height: 1.35; flex: 1; min-width: 0; }
+.pick .v b { font-size: 15.5px; font-weight: 800; }
+.pick .v small { font-size: 12.5px; font-weight: 700; color: var(--ink2); }
+.pick .radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--lilac-line); flex-shrink: 0; transition: border 0.15s; }
+.pick.on { background: var(--lilac-a); }
+.pick.on .radio { border: 7px solid var(--brand); }
+.pick:active { transform: scale(0.98); }
+.big { font-size: 26px; font-weight: 900; }
+
+/* test */
+.bar { height: 8px; border-radius: 4px; background: var(--glass); overflow: hidden; }
+.bar > div { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--brand), var(--lilac-d)); transition: width 0.3s ease; }
+.q { font-size: 20px; font-weight: 800; direction: ltr; text-align: left; padding: 22px 18px; }
+.opt { border: 1.5px solid var(--glass-line); background: var(--glass); border-radius: 18px; padding: 14px 16px; font-weight: 800; direction: ltr; text-align: left; width: 100%; transition: transform 0.15s; }
+.opt:active { transform: scale(0.97); }
+
+/* sheet, main button, toast */
+.mainbar { position: fixed; inset: auto 0 0; z-index: 8; padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.mainbar button { display: block; width: 100%; max-width: 460px; margin: 0 auto; border: 0; border-radius: 18px; padding: 15px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; font-weight: 900; font-size: 16px; box-shadow: 0 10px 24px rgba(124, 92, 240, 0.32); }
+.sheet-wrap { position: fixed; inset: 0; z-index: 20; background: rgba(20, 18, 40, 0.35); display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-width: 500px; max-height: 90%; overflow: auto; background: #FFFFFF; border-radius: 28px 28px 0 0; padding: 10px 18px calc(20px + env(safe-area-inset-bottom, 0px)); animation: up 0.28s cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.grab { width: 44px; height: 5px; border-radius: 3px; background: var(--ink2); opacity: 0.3; margin: 2px auto 12px; }
+.toast { position: fixed; inset-inline: 16px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); z-index: 30; max-width: 428px; margin: 0 auto; background: #1E2233; color: #fff; border-radius: 16px; padding: 12px 14px; font-size: 13.5px; font-weight: 700; }
+.done { text-align: center; padding: 28px 18px; }
+.done .ok { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 12px; background: var(--brand); animation: pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes pop { from { transform: scale(0.3); } to { transform: scale(1); } }
+.ribbon { max-width: 460px; margin: 10px auto 0; text-align: center; font-size: 12px; font-weight: 800; color: var(--lilac-d); }
+@media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+
+/* ── café ── */
+.cup .steam path { animation: steam 2.4s ease-in-out infinite; opacity: 0; }
+.cup .steam path:nth-child(2) { animation-delay: 0.8s; }
+.cup .steam path:nth-child(3) { animation-delay: 1.6s; }
+@keyframes steam { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: 0.9; } 100% { opacity: 0; transform: translateY(-8px); } }
+.pill.off { background: #F4F3F9; color: var(--ink2); border-color: var(--glass-line); }
+textarea.input { resize: none; line-height: 1.7; }
+.cats { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; overflow-x: auto; padding: 6px 2px 10px; margin: 0 -2px 4px; background: #FFFFFF; scrollbar-width: none; }
+.cats::-webkit-scrollbar { display: none; }
+.cat { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--glass-line); background: #FFFFFF; border-radius: 999px; padding: 8px 14px; font-weight: 800; font-size: 14px; }
+.cat svg { width: 20px; height: 20px; }
+.cat[aria-pressed="true"] { background: var(--lilac-a); border-color: var(--brand); color: var(--lilac-d); box-shadow: 0 4px 12px rgba(124, 92, 240, 0.15); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.food { background: #FFFFFF; border: 1.5px solid var(--glass-line); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+.food .ph { position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; border: 0; padding: 0; background: var(--lilac-a); }
+.food .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tag { position: absolute; top: 8px; inset-inline-start: 8px; background: rgba(255, 255, 255, 0.94); color: var(--lilac-d); border: 1.5px solid var(--lilac-line); font-size: 11.5px; font-weight: 900; padding: 1px 9px; border-radius: 999px; }
+.food .fb { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.food .fb b { font-size: 15.5px; font-weight: 900; }
+.food .fb .hint { font-size: 12px; line-height: 1.5; }
+.food .act { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; margin-top: auto; padding-top: 8px; }
+.pr { font-weight: 900; font-size: 13.5px; }
+.add { width: 36px; height: 36px; border-radius: 12px; border: 0; padding: 0; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #FFFFFF; display: grid; place-items: center; box-shadow: 0 6px 14px rgba(124, 92, 240, 0.3); flex-shrink: 0; }
+.add:active { transform: scale(0.92); }
+.stp { display: inline-flex; align-items: center; gap: 2px; background: var(--lilac-a); border: 1.5px solid var(--lilac-line); border-radius: 12px; padding: 2px; }
+.stp button { width: 26px; height: 28px; border: 0; border-radius: 9px; background: #FFFFFF; color: var(--lilac-d); font-weight: 900; font-size: 17px; display: grid; place-items: center; padding: 0; }
+.stp b { min-width: 18px; text-align: center; font-weight: 900; color: var(--lilac-d); }
+.stp.big button { width: 40px; height: 40px; font-size: 20px; border-radius: 11px; }
+.stp.big b { min-width: 34px; font-size: 17px; }
+.seg button small { display: block; font-size: 11px; font-weight: 700; opacity: 0.8; }
+.hero-img { width: 100%; height: 210px; border-radius: 20px; overflow: hidden; margin-bottom: 12px; background: var(--lilac-a); }
+.hero-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.line { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+.line + .line { border-top: 1.5px dashed var(--glass-line); }
+.line img { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; flex-shrink: 0; }
+.line .v { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.45; }
+.line .v b { font-size: 15px; font-weight: 800; }
+.line .v small { font-size: 12px; color: var(--ink2); font-weight: 700; }
+.sum .row { justify-content: space-between; padding: 3px 0; }
+.sum .total { border-top: 1.5px dashed var(--glass-line); margin-top: 6px; padding-top: 10px; }
+.empty { text-align: center; padding: 30px 18px; }
+.empty > svg { width: 92px; height: 92px; margin-bottom: 6px; }
+.step { display: flex; gap: 12px; align-items: flex-start; position: relative; padding-bottom: 20px; }
+.step:last-child { padding-bottom: 0; }
+.step .b { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; background: #F4F3F9; color: #B9B8C8; border: 2px solid #ECEBF3; position: relative; z-index: 1; }
+.step:not(:last-child)::before { content: ""; position: absolute; top: 36px; bottom: 0; inset-inline-start: 17px; width: 2px; background: #ECEBF3; }
+.step.done .b { background: var(--mint-b); border-color: var(--mint-line); color: var(--mint-d); }
+.step.done:not(:last-child)::before { background: var(--mint-line); }
+.step.now .b { background: linear-gradient(135deg, var(--brand), var(--brand-2)); border-color: transparent; color: #FFFFFF; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 5px rgba(124, 92, 240, 0.18); } 50% { box-shadow: 0 0 0 10px rgba(124, 92, 240, 0.05); } }
+.step .t { display: flex; flex-direction: column; line-height: 1.5; padding-top: 4px; }
+.step .t b { font-size: 15.5px; font-weight: 900; }
+.step:not(.done):not(.now) .t b { color: var(--ink2); }
+.pay-wait { text-align: center; padding: 34px 10px; }
+.spin { width: 54px; height: 54px; border-radius: 50%; border: 5px solid var(--lilac-b); border-top-color: var(--brand); margin: 0 auto 14px; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── gym ── */
+.mcard { position: relative; overflow: hidden; display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 16px; border-radius: 24px; color: #FFFFFF; background: linear-gradient(135deg, #7C5CF0, #5B8DEF); box-shadow: 0 12px 28px rgba(91, 141, 239, 0.32); }
+.mcard::after { content: ""; position: absolute; width: 190px; height: 190px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); top: -80px; inset-inline-start: -60px; }
+.mcard > * { position: relative; z-index: 1; }
+.mcard .v { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.5; }
+.mcard .v small { font-size: 12.5px; font-weight: 700; opacity: 0.88; }
+.mcard .v b { font-size: 18px; font-weight: 900; }
+.ring { width: 62px; height: 62px; flex-shrink: 0; }
+.qrbtn { width: 54px; height: 54px; padding: 6px; border: 0; border-radius: 15px; background: #FFFFFF; display: grid; place-items: center; flex-shrink: 0; box-shadow: 0 6px 16px rgba(42, 45, 67, 0.2); }
+.qrbig { display: grid; place-items: center; margin: 6px auto 12px; padding: 16px; width: 236px; border-radius: 24px; background: #FFFFFF; border: 1.5px solid var(--glass-line); box-shadow: var(--shadow); }
+.pill.warn { background: #FFF1E2; color: #B5651D; border-color: #FFD3A8; }
+.ses { display: flex; align-items: center; gap: 12px; padding: 12px; }
+.ses + .ses { border-top: 1.5px dashed var(--glass-line); }
+.ses .tm { width: 52px; flex-shrink: 0; text-align: center; font-weight: 900; font-size: 15px; line-height: 1.3; }
+.ses .tm small { display: block; font-size: 11px; font-weight: 700; color: var(--ink2); }
+.ses .v { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.45; }
+.ses .v b { font-size: 15.5px; font-weight: 900; }
+.ses .v small { font-size: 12px; font-weight: 700; color: var(--ink2); }
+.bk { padding: 8px 12px; font-size: 13px; border-radius: 12px; white-space: nowrap; }
+.bk.on { background: var(--mint-a); color: var(--mint-d); border: 1.5px solid var(--mint-line); }
+.bk.wait { background: #F6F5FA; color: var(--ink2); border: 1.5px solid var(--glass-line); }
+.pick .chk { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--lilac-line); flex-shrink: 0; display: grid; place-items: center; color: transparent; background: #FFFFFF; transition: background 0.15s; }
+.pick.on .chk { background: var(--brand); border-color: var(--brand); color: #FFFFFF; }
+.pick .note { font-size: 11px; font-weight: 900; color: var(--mint-d); background: var(--mint-a); border: 1.5px solid var(--mint-line); border-radius: 999px; padding: 0 8px; margin-inline-start: 6px; }
+.ex { display: flex; align-items: center; gap: 12px; padding: 11px 12px; }
+.ex + .ex { border-top: 1.5px dashed var(--glass-line); }
+.ex .ck { width: 32px; height: 32px; padding: 0; border-radius: 10px; border: 2px solid var(--lilac-line); background: #FFFFFF; display: grid; place-items: center; color: transparent; flex-shrink: 0; transition: background 0.15s; }
+.ex.done .ck { background: var(--mint-b); border-color: var(--mint-line); color: var(--mint-d); }
+.ex .v { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.45; }
+.ex .v b { font-size: 15px; font-weight: 800; }
+.ex.done .v b { text-decoration: line-through; color: var(--ink2); }
+.ex .v small { font-size: 12.5px; font-weight: 700; color: var(--ink2); }
+.restbtn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 12px; border: 1.5px solid var(--sky-line); background: var(--sky-a); color: var(--sky-d); font-weight: 800; font-size: 12.5px; white-space: nowrap; }
+.rest { position: fixed; inset-inline: 16px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 25; max-width: 428px; margin: 0 auto; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 18px; background: #2A2D43; color: #FFFFFF; font-weight: 800; box-shadow: 0 10px 30px rgba(42, 45, 67, 0.3); }
+.rest b { margin-inline-start: auto; font-size: 22px; font-weight: 900; }
+.rest button { border: 0; background: rgba(255, 255, 255, 0.14); color: #FFFFFF; border-radius: 10px; padding: 6px 10px; font-weight: 800; }
+.mini button svg { width: 22px; height: 22px; flex-shrink: 0; }
+</style>
+
+<div class="ribbon">نسخه‌ی آزمایشی ۱ · اطلاعات نمونه</div>
+<div class="app" id="app"><div class="hint" style="text-align:center;padding:40px 0">در حال باز شدن…</div></div>
+<div id="mainbar"></div>
+<div id="overlay"></div>
+<script>
+/* Shows any script error on the page, so a screenshot tells us what went wrong. */
+window.addEventListener("error", function (e) {
+  var box = document.createElement("div");
+  box.setAttribute("style", "margin:12px auto;max-width:460px;padding:12px 14px;border-radius:14px;background:#FCE6E2;color:#B3261E;font:12px/1.5 monospace;direction:ltr;text-align:left");
+  box.textContent = "Error: " + e.message + " (line " + e.lineno + ")";
+  document.body.appendChild(box);
+});
+</script>
+
+<script>
+/* ── Telegram bridge: real calls inside Telegram, friendly stand-ins in a browser ── */
+const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+if (tg) { tg.ready(); tg.expand(); try { tg.disableVerticalSwipes(); } catch (e) {} }
+const IN_TG = Boolean(tg && tg.initData);
+/* Preview: forms show their success screen but send nothing to the bot yet. */
+const PREVIEW = true;
+/* sendData only works when the app was opened from a keyboard button (no query_id then). */
+const CAN_SEND = !PREVIEW && IN_TG && typeof tg.sendData === "function" && !(tg.initDataUnsafe && tg.initDataUnsafe.query_id);
+const haptic = (k) => { try { k === "ok" ? tg.HapticFeedback.notificationOccurred("success") : tg.HapticFeedback.impactOccurred(k || "light"); } catch (e) {} };
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem("gym:" + k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem("gym:" + k, JSON.stringify(v)); } catch (e) {} try { tg && tg.CloudStorage && tg.CloudStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+const firstName = () => (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name) || "";
+
+/* ── helpers ── */
+const $ = (s) => document.querySelector(s);
+const fa = (v) => String(v).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
+const money = (n) => Math.round(n / 1000) * 1000;
+const toman = (n) => money(n).toLocaleString("fa-IR");
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const faDate = (d) => new Intl.DateTimeFormat("fa-IR-u-ca-persian", { weekday: "long", day: "numeric", month: "long" }).format(d);
+const DAY = 86400000;
+const left = (end) => Math.ceil((end - Date.now()) / DAY);
+
+/* ── cute two-tone icons ── */
+const ICON = {
+  book: `<svg viewBox="0 0 64 64"><defs><linearGradient id="gB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8BE8D6"/><stop offset="1" stop-color="#2FB49B"/></linearGradient></defs><rect x="12" y="8" width="40" height="48" rx="10" fill="url(#gB)"/><rect x="12" y="8" width="9" height="48" rx="4.5" fill="#0B5C4E" opacity=".12"/><rect x="15" y="45" width="37" height="11" rx="5.5" fill="#fff"/><rect x="26" y="19" width="12" height="4" rx="2" fill="#fff"/><rect x="26" y="27" width="8" height="4" rx="2" fill="#fff" opacity=".65"/><path d="M41 8h7v16l-3.5-2.6L41 24z" fill="#FFC857"/></svg>`,
+  target: `<svg viewBox="0 0 64 64"><defs><linearGradient id="gT" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#CDBEFF"/><stop offset="1" stop-color="#7C5CF0"/></linearGradient></defs><circle cx="30" cy="35" r="22" fill="url(#gT)"/><circle cx="30" cy="35" r="15" fill="#fff"/><circle cx="30" cy="35" r="8.5" fill="url(#gT)"/><circle cx="30" cy="35" r="3" fill="#fff"/><path d="M30 35 50 15" stroke="#3E2E86" stroke-width="3.5" stroke-linecap="round"/><path d="M46 8.5l8.5 1.8-1.8 8.5-6.2-4.1z" fill="#FFC857"/></svg>`,
+  pen: `<svg viewBox="0 0 64 64"><defs><linearGradient id="gP" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B9DAFF"/><stop offset="1" stop-color="#4C8FEA"/></linearGradient></defs><rect x="12" y="10" width="38" height="47" rx="10" fill="url(#gP)"/><rect x="18" y="18" width="26" height="33" rx="6" fill="#fff"/><rect x="23" y="6" width="16" height="9" rx="4.5" fill="#FFD36E"/><path d="M24 34.5l5 5 9.5-10" stroke="#4C8FEA" stroke-width="3.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  chat: `<svg viewBox="0 0 64 64"><defs><linearGradient id="gC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE59A"/><stop offset="1" stop-color="#FFB224"/></linearGradient></defs><path d="M44 38c6.6 0 12 3.8 12 8.6 0 2.4-1.3 4.6-3.5 6.2L54 58l-5.6-2.7c-1.4.3-2.9.4-4.4.4-6.6 0-12-3.8-12-8.6" fill="#C9B8FF"/><path d="M8 28c0-10 9.8-17.5 22-17.5S52 18 52 28 42.2 45.5 30 45.5c-3 0-5.8-.4-8.4-1.2L11 49l3-8.6C10.2 37.2 8 32.8 8 28z" fill="url(#gC)"/><circle cx="21" cy="28" r="3.3" fill="#fff"/><circle cx="30" cy="28" r="3.3" fill="#fff"/><circle cx="39" cy="28" r="3.3" fill="#fff"/></svg>`,
+  gift: `<svg viewBox="0 0 24 24" width="22" height="22"><rect x="3.5" y="10" width="17" height="10.5" rx="2.6" fill="#B9DAFF"/><rect x="2.5" y="6.8" width="19" height="4.6" rx="2" fill="#4C8FEA"/><rect x="10.8" y="6.8" width="2.4" height="13.7" fill="#FFD36E"/><path d="M12 6.8C9.6 2.8 5.6 4.4 7.6 6.8M12 6.8c2.4-4 6.4-2.4 4.4 0" fill="none" stroke="#4C8FEA" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  cal: `<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="4" fill="#E4DBFF"/><path d="M3 9a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v1H3z" fill="#7C5CF0"/><rect x="7" y="3" width="2.2" height="5" rx="1.1" fill="#3E2E86"/><rect x="14.8" y="3" width="2.2" height="5" rx="1.1" fill="#3E2E86"/><circle cx="12" cy="15.5" r="2.3" fill="#4C8FEA"/></svg>`,
+  sun: `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="7" fill="#FFC857"/><path d="M16 3v3M16 26v3M3 16h3M26 16h3M6.8 6.8l2.1 2.1M23.1 23.1l2.1 2.1M6.8 25.2l2.1-2.1M23.1 8.9l2.1-2.1" stroke="#FFB224" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+  sunset: `<svg viewBox="0 0 32 32"><path d="M7 22a9 9 0 0 1 18 0z" fill="#FFB38A"/><path d="M4 22h24M9 26.5h14" stroke="#F08A4B" stroke-width="2.4" stroke-linecap="round"/><path d="M16 5v4M7.5 9.5l2.2 2.2M24.5 9.5l-2.2 2.2" stroke="#FFB224" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+  moon: `<svg viewBox="0 0 32 32"><path d="M20 5a11 11 0 1 0 7 19.5A9.5 9.5 0 0 1 20 5z" fill="#9F86FF"/><circle cx="24.5" cy="8.5" r="1.7" fill="#FFC857"/><circle cx="28" cy="14" r="1.1" fill="#FFC857"/></svg>`,
+  tick: `<span class="tk"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>`,
+  chev: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
+  cap: `<svg viewBox="0 0 24 24"><path d="M12 4 2 9l10 5 10-5z" fill="currentColor"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5l-6 3z" fill="currentColor" opacity=".55"/></svg>`,
+  talk: `<svg viewBox="0 0 24 24"><path d="M3 10c0-3.6 3.6-6 8-6s8 2.4 8 6-3.6 6-8 6c-1 0-2-.1-2.9-.4L4 17l1.1-3C3.8 13 3 11.6 3 10z" fill="currentColor"/><path d="M20.5 12.5c.3.6.5 1.2.5 1.9 0 1-.4 1.9-1.1 2.6l.6 2.5-2.6-1.2c-.6.1-1.2.2-1.9.2-1.7 0-3.2-.5-4.3-1.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></svg>`,
+  medal: `<svg viewBox="0 0 24 24"><path d="M7 2h4l2 5H9zM17 2h-4l-2 5h4z" fill="currentColor" opacity=".55"/><circle cx="12" cy="14.5" r="6.5" fill="currentColor"/><path d="m12 11 1.1 2.2 2.4.3-1.8 1.7.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.7 2.4-.3z" fill="#fff"/></svg>`,
+  phone: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg>`,
+  back: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+  mascot: `<svg class="mascot" viewBox="0 0 64 64"><path d="M32 34C32 20 22 14 12 16c0 10 8 18 20 18z" fill="#6FD3A3"/><path d="M32 34c0-12 9-18 20-17 0 10-8 17-20 17z" fill="#9BE7C3"/><path d="M32 34v6" stroke="#3FA878" stroke-width="3" stroke-linecap="round"/><ellipse cx="32" cy="50" rx="17" ry="12" fill="#FFD2BC"/><circle cx="26" cy="49" r="2.4" fill="#1E2233"/><circle cx="38" cy="49" r="2.4" fill="#1E2233"/><path d="M28 54q4 3 8 0" stroke="#1E2233" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="22" cy="53" r="2.2" fill="#FFC2A8" opacity=".7"/><circle cx="42" cy="53" r="2.2" fill="#FFC2A8" opacity=".7"/></svg>`,
+};
+
+
+/* ── gym icons (added to the shared set) ── */
+Object.assign(ICON, {
+  classI: `<svg viewBox="0 0 64 64"><defs><linearGradient id="gCl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8BE8D6"/><stop offset="1" stop-color="#2FB49B"/></linearGradient></defs><rect x="9" y="12" width="46" height="44" rx="11" fill="url(#gCl)"/><rect x="18" y="7" width="5" height="11" rx="2.5" fill="#17806F"/><rect x="41" y="7" width="5" height="11" rx="2.5" fill="#17806F"/><rect x="15" y="22" width="34" height="28" rx="7" fill="#fff"/><path d="M24 36l6 6 11-12" stroke="#2FB49B" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  renewI: `<svg viewBox="0 0 64 64"><defs><linearGradient id="gRn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#CDBEFF"/><stop offset="1" stop-color="#7C5CF0"/></linearGradient></defs><rect x="6" y="12" width="44" height="30" rx="8" fill="url(#gRn)"/><rect x="6" y="19" width="44" height="6" fill="#3E2E86" opacity=".35"/><rect x="12" y="31" width="14" height="4" rx="2" fill="#fff"/><circle cx="46" cy="44" r="13" fill="#fff"/><path d="M40 44a6 6 0 1 0 2-4.5" stroke="#7C5CF0" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M41 35.5v4.5h4.5" stroke="#7C5CF0" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  dumbI: `<svg viewBox="0 0 64 64"><defs><linearGradient id="gDb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE59A"/><stop offset="1" stop-color="#FFB224"/></linearGradient></defs><rect x="20" y="29" width="24" height="6" rx="3" fill="#8F6200"/><rect x="10" y="17" width="11" height="30" rx="5.5" fill="url(#gDb)"/><rect x="43" y="17" width="11" height="30" rx="5.5" fill="url(#gDb)"/><rect x="4" y="23" width="7" height="18" rx="3.5" fill="#E89A10"/><rect x="53" y="23" width="7" height="18" rx="3.5" fill="#E89A10"/></svg>`,
+  askI: `<svg viewBox="0 0 64 64"><defs><linearGradient id="gAk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B9DAFF"/><stop offset="1" stop-color="#4C8FEA"/></linearGradient></defs><path d="M8 28c0-10 9.8-17.5 22-17.5S52 18 52 28 42.2 45.5 30 45.5c-3 0-5.8-.4-8.4-1.2L11 49l3-8.6C10.2 37.2 8 32.8 8 28z" fill="url(#gAk)"/><path d="M25.5 23.5a4.5 4.5 0 1 1 6.3 4.1c-1.3.6-1.8 1.4-1.8 2.7v.7" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round"/><circle cx="30" cy="36.5" r="2.2" fill="#fff"/><path d="M54 6l1.6 4.4L60 12l-4.4 1.6L54 18l-1.6-4.4L48 12l4.4-1.6z" fill="#FFC857"/></svg>`,
+  kettle: `<svg class="mascot" viewBox="0 0 64 64"><defs><linearGradient id="gKb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B9DAFF"/><stop offset="1" stop-color="#7C5CF0"/></linearGradient></defs><ellipse cx="32" cy="59" rx="20" ry="3.5" fill="#E4DBFF"/><path d="M22 25a10 10 0 0 1 20 0" stroke="#3E2E86" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="32" cy="38" r="18" fill="url(#gKb)"/><path d="M23 36c2-6 6-8.5 10-8.5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".6"/><path d="M51 6l1.6 4.4L57 12l-4.4 1.6L51 18l-1.6-4.4L45 12l4.4-1.6z" fill="#FFC857"/></svg>`,
+  lockI: `<svg viewBox="0 0 24 24" width="24" height="24"><rect x="5" y="3" width="14" height="18" rx="3" fill="#B3D4FF"/><path d="M9 7h6M9 10h6" stroke="#4C8FEA" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="15.5" r="1.8" fill="#4C8FEA"/></svg>`,
+  coachI: `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="7" r="4" fill="#B9A6FF"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z" fill="#B9A6FF"/><path d="M15.5 11.5l3 2" stroke="#6A4FD0" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  dietI: `<svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 7c-2-1.6-6-1.4-7 2.4-1 3.8 1.2 9.6 4 10.6 1.2.4 2-.4 3-.4s1.8.8 3 .4c2.8-1 5-6.8 4-10.6C18 5.6 14 5.4 12 7z" fill="#ABE7DA"/><path d="M12 7c0-2 1-3.5 3-4" stroke="#17806F" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`,
+  timerI: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>`,
+  cardI: `<svg viewBox="0 0 24 24" width="24" height="24"><rect x="2.5" y="5" width="19" height="14" rx="3" fill="#B9A6FF"/><rect x="2.5" y="8.5" width="19" height="3" fill="#7C5CF0"/><rect x="5" y="14" width="6" height="2" rx="1" fill="#fff"/></svg>`,
+  instI: `<svg viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="4" width="18" height="16" rx="3" fill="#FFDC85"/><path d="M7 9h10M7 13h5" stroke="#8F6200" stroke-width="2" stroke-linecap="round"/><circle cx="16.5" cy="15" r="2.6" fill="#8F6200"/></svg>`,
+  ok: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+});
+/* A decorative QR-style entry code (21×21 modules with the three corner squares); the demo code is not scannable. */
+function qrSvg(seed, size) {
+  let x = seed % 2147483647 || 7;
+  const rnd = () => (x = (x * 16807) % 2147483647) / 2147483647;
+  const n = 21, corner = (r, c) => (r < 8 && c < 8) || (r < 8 && c > n - 9) || (r > n - 9 && c < 8);
+  let cells = "";
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!corner(r, c) && rnd() < 0.47) cells += `<rect x="${c}" y="${r}" width="1.02" height="1.02"/>`;
+  const fp = (cx, cy) => `<rect x="${cx + 0.5}" y="${cy + 0.5}" width="6" height="6" rx="1.4" fill="none" stroke="#2A2D43"/><rect x="${cx + 2}" y="${cy + 2}" width="3" height="3" rx="0.7"/>`;
+  return `<svg viewBox="-1 -1 23 23" width="${size}" height="${size}" fill="#2A2D43" aria-hidden="true">${cells}${fp(0, 0)}${fp(n - 7, 0)}${fp(0, n - 7)}</svg>`;
+}
+
+/* ── gym data (sample; the owner changes it later) ── */
+const GYM = { name: "باشگاه شما", phone: "۰۲۱-۱۲۳۴۵۶۷۸", lockersFree: 4 };
+const CLASS = {
+  pilates: { t: "پیلاتس", c: "mint", lvl: "همه‌ی سطوح", dur: 60 },
+  yoga: { t: "یوگا", c: "lilac", lvl: "مبتدی", dur: 60 },
+  spin: { t: "اسپینینگ", c: "peach", lvl: "متوسط", dur: 45 },
+  body: { t: "بادی‌پامپ", c: "sky", lvl: "همه‌ی سطوح", dur: 55 },
+  hiit: { t: "HIIT", c: "peach", lvl: "پیشرفته", dur: 40 },
+  trx: { t: "TRX", c: "mint", lvl: "متوسط", dur: 50 },
+};
+/* Weekly timetable: d = week days (0 = Saturday), g = f (women, 8 to 15) or m (men, 16 to 22). Fridays closed. */
+const SESSIONS = [
+  { id: "s1", cls: "body", d: [1, 3, 5], at: "۸:۰۰", g: "f", coach: "سارا", cap: 15 },
+  { id: "s2", cls: "pilates", d: [0, 2, 4], at: "۹:۰۰", g: "f", coach: "سارا", cap: 12 },
+  { id: "s3", cls: "yoga", d: [1, 3], at: "۱۰:۳۰", g: "f", coach: "مریم", cap: 14 },
+  { id: "s4", cls: "spin", d: [0, 1, 2, 3, 4, 5], at: "۱۲:۰۰", g: "f", coach: "نگار", cap: 16 },
+  { id: "s5", cls: "body", d: [5], at: "۱۷:۰۰", g: "m", coach: "علی", cap: 15 },
+  { id: "s6", cls: "hiit", d: [0, 2, 4], at: "۱۸:۰۰", g: "m", coach: "علی", cap: 14 },
+  { id: "s7", cls: "trx", d: [1, 3], at: "۱۹:۰۰", g: "m", coach: "رضا", cap: 10 },
+  { id: "s8", cls: "spin", d: [0, 1, 2, 3, 4], at: "۲۰:۰۰", g: "m", coach: "امیر", cap: 16 },
+];
+const WEEK = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
+const PLANS = [
+  { id: "1m", t: "۱ ماهه", months: 1, price: 1500000 },
+  { id: "3m", t: "۳ ماهه", months: 3, price: 4050000, note: "۱۰٪ تخفیف" },
+  { id: "6m", t: "۶ ماهه", months: 6, price: 7200000, note: "۲۰٪ تخفیف" },
+];
+const ADDONS = [
+  { id: "locker", t: "کمد اختصاصی", sub: `${fa(4)} کمد خالی مونده · ماهی ۳۰۰ هزار`, price: 300000, monthly: true, i: "lockI" },
+  { id: "coach", t: "۸ جلسه مربی خصوصی", sub: "برنامه و همراهی یک‌به‌یک", price: 4800000, i: "coachI" },
+  { id: "diet", t: "برنامه‌ی تغذیه", sub: "با متخصص تغذیه، ۴ هفته‌ای", price: 900000, i: "dietI" },
+];
+const PROGRAM = {
+  coach: "علی", goal: "عضله‌سازی · برنامه‌ی ۴ هفته‌ای",
+  days: [
+    { t: "روز ۱", s: "سینه و پشت‌بازو", ex: [
+      { n: "پرس سینه هالتر", sets: 4, reps: "۱۰", rest: 90 }, { n: "پرس بالاسینه دمبل", sets: 3, reps: "۱۲", rest: 75 },
+      { n: "قفسه سینه دستگاه", sets: 3, reps: "۱۵", rest: 60 }, { n: "دیپ پارالل", sets: 3, reps: "تا ناتوانی", rest: 90 }, { n: "پشت‌بازو سیم‌کش", sets: 4, reps: "۱۲", rest: 60 }] },
+    { t: "روز ۲", s: "پا و شکم", ex: [
+      { n: "اسکوات هالتر", sets: 4, reps: "۸", rest: 120 }, { n: "پرس پا", sets: 4, reps: "۱۲", rest: 90 },
+      { n: "جلوپا دستگاه", sets: 3, reps: "۱۵", rest: 60 }, { n: "پشت‌پا خوابیده", sets: 3, reps: "۱۲", rest: 60 }, { n: "پلانک", sets: 3, reps: "۴۵ ثانیه", rest: 45 }] },
+    { t: "روز ۳", s: "پشت و جلوبازو", ex: [
+      { n: "بارفیکس", sets: 4, reps: "تا ناتوانی", rest: 90 }, { n: "زیربغل سیم‌کش", sets: 4, reps: "۱۰", rest: 75 },
+      { n: "روئینگ هالتر", sets: 3, reps: "۱۰", rest: 75 }, { n: "جلوبازو هالتر", sets: 4, reps: "۱۰", rest: 60 }, { n: "جلوبازو چکشی", sets: 3, reps: "۱۲", rest: 60 }] },
+  ],
+};
+const KB = [
+  { q: "شهریه‌ی ماهانه چنده؟", a: "ماهانه ۱٫۵ میلیون تومان؛ ۳ ماهه ۱۰٪ و ۶ ماهه ۲۰٪ تخفیف داره. از «تمدید شارژ» آنلاین تمدید کن.", k: "شهریه قیمت هزینه ماهانه چنده" },
+  { q: "ساعت بانوان و آقایان؟", a: "بانوان هر روز ۸ تا ۱۵ و آقایان ۱۶ تا ۲۲. جمعه‌ها تعطیله.", k: "ساعت خانم بانوان آقایان کی" },
+  { q: "کلاس امشب تشکیله؟", a: "برنامه و جاهای خالی هر روز تو «رزرو کلاس» زنده‌ست. اگه کلاسی لغو بشه، همین‌جا تو تلگرام خبرت می‌کنیم.", k: "کلاس امشب تشکیل لغو پیلاتس جا" },
+  { q: "مربی خصوصی دارید؟", a: "بله، بسته‌ی ۸ جلسه‌ای ۴٫۸ میلیون تومان. موقع تمدید شارژ اضافه‌ش کن.", k: "مربی خصوصی" },
+  { q: "رژیم غذایی هم می‌دید؟", a: "بله، برنامه‌ی تغذیه‌ی ۴ هفته‌ای با متخصص تغذیه، ۹۰۰ هزار تومان.", k: "رژیم غذایی تغذیه" },
+  { q: "کمد خالی دارید؟", a: "الان ۴ کمد اختصاصی خالی داریم، ماهی ۳۰۰ هزار تومان؛ موقع تمدید انتخابش کن.", k: "کمد لاکر خالی" },
+  { q: "کارت‌به‌کارت کنم؟", a: "لازم نیست؛ تو «تمدید شارژ» با کارت بانکی یا قسطی آنلاین پرداخت کن و رسیدش همین‌جا میاد.", k: "کارت به کارت پرداخت واریز" },
+  { q: "پارکینگ دارید؟", a: "بله، پارکینگ برای اعضا رایگانه.", k: "پارکینگ ماشین" },
+];
+
+/* ── state + router ── */
+/* Date key n days from now (the shared calendar helpers load later in the page, so this stands alone). */
+const inDays = (n) => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const state = {
+  member: store.get("member") || { plan: "1m", end: inDays(9) },
+  g: store.get("g") || "f",
+  day: "",
+  bookings: store.get("bookings") || [],
+  renew: { plan: "3m", add: [], start: "" },
+  pay: "card",
+  wday: 0,
+  done: store.get("done") || {},
+  ask: "",
+  req: { goal: "fit", days: 3 },
+};
+/* Which drawers are open and which sheet is showing, so re-renders keep them. */
+const ui = { calM: 0, calDir: "", sheet: "", cal: "", reqOpen: false, dietOpen: false };
+document.addEventListener("toggle", (e) => { const k = e.target.dataset && e.target.dataset.drawer; if (k) ui[k] = e.target.open; }, true);
+const ROUTES = ["home", "classes", "renew", "workout", "ask"];
+const route = () => { const r = (location.hash || "#home").slice(1); return ROUTES.includes(r) ? r : "home"; };
+const go = (r) => { haptic("light"); location.hash === "#" + r ? render() : (location.hash = r); };
+const onBack = () => (history.length > 1 ? history.back() : go("home"));
+if (tg && tg.BackButton) tg.BackButton.onClick(onBack);
+window.addEventListener("hashchange", () => { closeSheet(); render(); window.scrollTo(0, 0); });
+
+function toast(t) { const el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), 3200); }
+function setMain(text, fn) {
+  if (tg && tg.MainButton) {
+    if (setMain.h) tg.MainButton.offClick(setMain.h);
+    if (!text) { tg.MainButton.hide(); return; }
+    setMain.h = () => { haptic("medium"); fn(); };
+    tg.MainButton.setParams({ text, color: getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#7C5CF0", text_color: "#ffffff", is_visible: true });
+    tg.MainButton.onClick(setMain.h);
+    return;
+  }
+  $("#mainbar").innerHTML = text ? `<div class="mainbar"><button id="mb" type="button">${esc(text)}</button></div>` : "";
+  if (text) $("#mb").onclick = () => { haptic("medium"); fn(); };
+}
+function sheet(html) {
+  /* Already open (a tap inside it): swap the content only, so it doesn't slide up again. */
+  const open = $("#sw .sheet");
+  if (open) { open.innerHTML = `<div class="grab"></div>${html}`; return; }
+  $("#overlay").innerHTML = `<div class="sheet-wrap" id="sw"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`;
+  $("#sw").onclick = (e) => { if (e.target.id !== "sw") return; const picker = ui.sheet; closeSheet(); if (picker) render(); };
+}
+function closeSheet() { $("#overlay").innerHTML = ""; ui.sheet = ""; }
+function topBar(title) {
+  if (tg && tg.BackButton) title ? tg.BackButton.show() : tg.BackButton.hide();
+  return `<div class="top">${title ? `<button class="round" type="button" data-act="back" aria-label="برگشت">${ICON.back}</button>` : ""}<h1>${title || GYM.name}</h1>
+    ${title ? "" : `<button class="round" type="button" data-act="homescreen" aria-label="آیکون روی صفحه‌ی گوشی">${ICON.phone}</button>`}</div>`;
+}
+
+/* Shamsi month calendar engine (shared with the language-school app). */
+const PF = new Intl.DateTimeFormat("en-u-ca-persian-nu-latn", { year: "numeric", month: "numeric", day: "numeric" });
+const jp = (d) => { const o = {}; for (const p of PF.formatToParts(d)) if (p.type !== "literal") o[p.type] = Number(p.value); return o; };
+const pad = (n) => String(n).padStart(2, "0");
+const dkey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const noon = (t) => { const x = new Date(t); x.setHours(12, 0, 0, 0); return x; };
+const firstOfMonth = (d) => noon(d.getTime() - (jp(d).day - 1) * DAY);
+const widx = (d) => (d.getDay() + 1) % 7; // 0 = Saturday … 6 = Friday
+function monthDays(offset, base = Date.now()) {
+  let d = firstOfMonth(noon(base));
+  for (let k = 0; k < offset; k++) d = firstOfMonth(noon(d.getTime() + 32 * DAY));
+  const out = [], m = jp(d).month;
+  for (let x = d; jp(x).month === m; x = noon(x.getTime() + DAY)) out.push(x);
+  return out;
+}
+/* Sample free seats per day (0 = full); real numbers come from the academy later. */
+const seats = (d) => (jp(d).day * 5 + jp(d).month) % 6;
+/* One month card. cell(d) → { cls, attr, sub, tick } decides how each day looks. */
+function calCard(offset, max, base, cell, legend) {
+  const days = monthDays(offset, base);
+  const fmt = (o) => new Intl.DateTimeFormat("fa-IR-u-ca-persian", o).format(days[0]);
+  const today = dkey(noon(Date.now()));
+  const dir = ui.calDir; ui.calDir = "";
+  const cells = days.map((d) => {
+    const c = cell(d), k = dkey(d);
+    return `<button type="button" class="cd ${c.cls || ""}${widx(d) === 6 ? " fri" : ""}${k === today ? " today" : ""}" ${c.attr || "disabled"} aria-pressed="${Boolean(c.tick)}" aria-label="${faDate(d)}${c.sub ? "، " + c.sub : ""}"><span class="n">${fa(jp(d).day)}</span>${c.sub ? `<span class="s">${c.sub}</span>` : ""}${c.tick ? ICON.tick : ""}</button>`;
+  }).join("");
+  return `<div class="calcard"><div class="cal-head"><button class="navb" type="button" data-nav="-1" ${offset > 0 ? "" : "disabled"} aria-label="ماه قبل">${ICON.back}</button>
+      <div class="m"><b>${fmt({ month: "long" })}</b><span>${fmt({ year: "numeric" })}</span></div>
+      <button class="navb flip" type="button" data-nav="1" ${offset < max ? "" : "disabled"} aria-label="ماه بعد">${ICON.back}</button></div>
+    <div class="cal${dir ? " in-" + dir : ""}">${WEEK.map((w, i) => `<span class="wd${i === 6 ? " fri" : ""}">${w}</span>`).join("")}${"<span></span>".repeat(widx(days[0]))}${cells}</div>
+    <div class="legend">${legend}</div></div>`;
+}
+
+/* ── helpers ── */
+const toDate = (k) => new Date(k + "T12:00:00");
+const today = () => dkey(noon(Date.now()));
+const daysLeft = () => Math.max(0, Math.round((toDate(state.member.end) - noon(Date.now())) / DAY));
+const planOf = (id) => PLANS.find((p) => p.id === id) || PLANS[0];
+const ses = (id) => SESSIONS.find((s) => s.id === id);
+const toMin = (at) => { const [h, m] = at.replace(/[۰-۹]/g, (x) => "۰۱۲۳۴۵۶۷۸۹".indexOf(x)).split(":").map(Number); return h * 60 + m; };
+/* Sample free seats per class and day (0 = full); real numbers come from the gym later. */
+const freeSeats = (k, s) => { let h = 7; for (const ch of k + s.id) h = (h * 31 + ch.charCodeAt(0)) % 9973; return h % 6; };
+const booked = (k, sid) => state.bookings.some((b) => b.k === k && b.s === sid);
+const sessionsOn = (d) => (widx(d) === 6 ? [] : SESSIONS.filter((s) => s.g === state.g && s.d.includes(widx(d))).sort((a, b) => toMin(a.at) - toMin(b.at)));
+const myBookings = () => state.bookings.filter((b) => b.k >= today()).sort((a, b) => a.k.localeCompare(b.k) || toMin(ses(a.s).at) - toMin(ses(b.s).at));
+/* Open a calendar on the month that holds the picked day (0 = this month, 1 = next). */
+const monthOffset = (k) => (jp(toDate(k)).month === jp(noon(Date.now())).month ? 0 : 1);
+const seedOf = () => [...(firstName() || "member")].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 2147483647, 7);
+function ring(left, total) {
+  const r = 26, C = 2 * Math.PI * r, p = Math.max(0, Math.min(1, left / total));
+  return `<svg class="ring" viewBox="0 0 62 62"><circle cx="31" cy="31" r="${r}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="6"/><circle cx="31" cy="31" r="${r}" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C * p} ${C}" transform="rotate(-90 31 31)"/><text x="31" y="31" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" font-family="Vazirmatn">${fa(left)}</text><text x="31" y="44" text-anchor="middle" font-size="9.5" font-weight="700" fill="#fff" font-family="Vazirmatn">روز</text></svg>`;
+}
+
+/* ── pages ── */
+function home() {
+  const n = firstName(), m = state.member, left = daysLeft(), nb = myBookings()[0];
+  return `${topBar("")}
+    <div class="glass hero"><div style="flex:1;min-width:0"><div class="welcome">Welcome</div><b>سلام${n ? " " + esc(n) : ""}!</b><span class="hint">امروز تمرین داری؟</span>
+      <div style="margin-top:8px"><span class="pill${left <= 10 ? " warn" : ""}">${left ? `${fa(left)} روز تا پایان شارژ` : "شارژت تموم شده"}</span></div></div>${ICON.kettle}</div>
+    <div class="mcard">${ring(left, planOf(m.plan).months * 30)}<div class="v"><small>کارت عضویت</small><b>${n ? esc(n) : "عضو باشگاه"}</b><small>شارژ ${planOf(m.plan).t} · تا ${faDate(toDate(m.end))}</small></div>
+      <button class="qrbtn" type="button" data-act="qr" aria-label="کد ورود">${qrSvg(seedOf(), 42)}</button></div>
+    <div class="tiles">
+      <button class="tile t-mint" type="button" data-go="classes">${ICON.classI}<b>رزرو کلاس</b><span>${nb ? "بعدی: " + CLASS[ses(nb.s).cls].t : "پیلاتس، یوگا، اسپینینگ…"}</span></button>
+      <button class="tile t-lilac" type="button" data-go="renew">${ICON.renewI}<b>تمدید شارژ</b><span>${left <= 10 ? "وقت تمدیده!" : "پلن‌ها و کمد"}</span></button>
+      <button class="tile t-sky" type="button" data-go="workout">${ICON.dumbI}<b>برنامه‌ی تمرین</b><span>${PROGRAM.days[state.wday].s}</span></button>
+      <button class="tile t-peach" type="button" data-go="ask">${ICON.askI}<b>پرسش</b><span>جواب فوری</span></button>
+    </div>
+    <div class="mini"><button type="button" data-go="classes">${ICON.cal}${nb ? `${CLASS[ses(nb.s).cls].t} · ${faDate(toDate(nb.k))} · ساعت ${ses(nb.s).at}` : "بانوان ۸ تا ۱۵ · آقایان ۱۶ تا ۲۲"}</button></div>`;
+}
+function qrSheet() {
+  ui.sheet = "qr";
+  sheet(`<div class="cal-title"><b>کد ورود</b><span class="hint">این کد رو جلوی گیت ورود بگیر</span></div>
+    <div class="qrbig">${qrSvg(seedOf(), 200)}</div>
+    <div class="hint" style="text-align:center">${daysLeft() ? `شارژ فعال تا ${faDate(toDate(state.member.end))}` : "شارژت تموم شده؛ اول تمدید کن"}${PREVIEW ? " · کد نمونه" : ""}</div>
+    <button class="btn" type="button" data-act="close" style="width:100%;padding:14px;margin-top:14px">باشه</button>`);
+}
+function sesRow(s, k) {
+  const c = CLASS[s.cls], free = freeSeats(k, s), on = booked(k, s.id);
+  const note = on ? `<small style="color:var(--mint-d)">جات رزرو شده</small>` : free ? `<small style="color:${free === 1 ? "#D9822B" : "var(--mint-d)"}">${fa(free)} جا خالی</small>` : `<small>پر شده</small>`;
+  return `<div class="ses"><div class="tm num">${s.at}<small>${fa(c.dur)} دقیقه</small></div><div class="v"><b>${c.t}</b><small>مربی ${s.coach} · ${c.lvl}</small>${note}</div>
+    ${on ? `<button class="btn bk on" type="button" data-unbook="${k}|${s.id}">رزرو شد ✓</button>` : free ? `<button class="btn bk" type="button" data-book="${k}|${s.id}">رزرو</button>` : `<button class="btn bk wait" type="button" data-wait="${s.id}">لیست انتظار</button>`}</div>`;
+}
+function classes() {
+  const day = state.day ? toDate(state.day) : noon(Date.now()), k = dkey(day), list = sessionsOn(day), mine = myBookings();
+  const open = list.filter((s) => freeSeats(k, s) > 0 || booked(k, s.id)).length;
+  return `${topBar("رزرو کلاس")}
+    <div class="seg"><button type="button" data-g="f" aria-pressed="${state.g === "f"}">بانوان<small>۸ تا ۱۵</small></button><button type="button" data-g="m" aria-pressed="${state.g === "m"}">آقایان<small>۱۶ تا ۲۲</small></button></div>
+    <div style="margin-top:12px"><span class="label">روز</span><button class="input datebtn" type="button" data-act="cal"><span class="ic">${ICON.cal}</span><span class="v"><span>${faDate(day)}</span><small>${list.length ? `${fa(open)} کلاس جا داره` : "این روز کلاس نداریم"}</small></span><span class="chev">${ICON.chev}</span></button></div>
+    <div class="glass" style="margin-top:12px">${list.length ? list.map((s) => sesRow(s, k)).join("") : `<div class="empty">${ICON.classI}<b style="display:block">${widx(day) === 6 ? "جمعه‌ها تعطیلیم" : "این روز کلاسی نیست"}</b><div class="hint">یه روز دیگه رو از تقویم انتخاب کن.</div></div>`}</div>
+    ${mine.length ? `<details class="acc" style="margin-top:12px" data-drawer="mineOpen"${ui.mineOpen ? " open" : ""}><summary><span class="badge t-mint">${ICON.ok}</span><div><b>کلاس‌های من</b><div class="hint">رزروهای پیش رو</div></div><span class="cnt">${fa(mine.length)} رزرو</span><span class="chev">${ICON.chev}</span></summary>
+      <div>${mine.map((b) => { const s = ses(b.s); return `<div class="ses"><div class="tm num">${s.at}</div><div class="v"><b>${CLASS[s.cls].t}</b><small>${faDate(toDate(b.k))} · مربی ${s.coach}</small></div><button class="btn bk wait" type="button" data-unbook="${b.k}|${b.s}">لغو</button></div>`; }).join("")}</div></details>` : ""}`;
+}
+/* Class days: today up to two weeks ahead; the number of classes with free seats under each day. */
+const classCell = (d) => {
+  const n = Math.round((d - noon(Date.now())) / DAY);
+  if (n < 0 || n > 13) return {};
+  const list = sessionsOn(d); if (!list.length) return {};
+  const k = dkey(d), open = list.filter((s) => freeSeats(k, s) > 0).length, on = k === (state.day || today());
+  if (!open) return { cls: "full", sub: "پر" };
+  return { cls: on ? "on" : "av", attr: `data-cday="${k}"`, sub: `${fa(open)} کلاس`, tick: on };
+};
+/* New membership: suggested start is the day after the current one ends. */
+const suggestedStart = () => { const after = dkey(noon(toDate(state.member.end).getTime() + DAY)); return after > today() ? after : today(); };
+const addMonths = (k, months) => dkey(noon(toDate(k).getTime() + (months * 30 - 1) * DAY));
+const startCell = (d) => {
+  const n = Math.round((d - noon(Date.now())) / DAY);
+  if (n < 0 || n > 30) return {};
+  const k = dkey(d), on = k === (state.renew.start || suggestedStart());
+  return { cls: on ? "on" : "av", attr: `data-sday="${k}"`, sub: k === suggestedStart() ? "پیشنهادی" : "", tick: on };
+};
+function calSheet() {
+  ui.sheet = "cal";
+  const isStart = ui.cal === "start", sel = isStart ? state.renew.start || suggestedStart() : state.day || today();
+  sheet(`<div class="cal-title"><b>${isStart ? "شروع شارژ جدید" : "روز کلاس"}</b><span class="hint">${isStart ? "پیشنهادی: روز بعد از پایان شارژ فعلی" : "زیر هر روز، تعداد کلاس‌های جادار نوشته شده"}</span></div>
+    ${calCard(ui.calM, 1, Date.now(), isStart ? startCell : classCell, isStart ? `<span><i class="lg"></i>قابل انتخاب</span><span><i class="lg today"></i>امروز</span>` : `<span><i class="lg"></i>کلاس جادار</span><span><i class="lg full"></i>پر</span><span><i class="lg today"></i>امروز</span>`)}
+    <button class="btn" type="button" data-act="calok" style="width:100%;padding:14px;margin-top:14px">تأیید · ${faDate(toDate(sel))}</button>`);
+}
+function renewTotal() {
+  const r = state.renew, p = planOf(r.plan);
+  return p.price + r.add.reduce((n, id) => { const a = ADDONS.find((x) => x.id === id); return n + (a.monthly ? a.price * p.months : a.price); }, 0);
+}
+function renew() {
+  const r = state.renew, p = planOf(r.plan), m = state.member, left = daysLeft(), start = r.start || suggestedStart(), end = addMonths(start, p.months);
+  return `${topBar("تمدید شارژ")}
+    <div class="glass" style="padding:14px 16px"><div class="row"><span class="hint">شارژ فعلی</span><b style="margin-inline-start:auto">${planOf(m.plan).t} · تا ${faDate(toDate(m.end))}</b></div>
+      ${left <= 10 ? `<div class="hint" style="color:#B5651D;margin-top:4px">${left ? `فقط ${fa(left)} روز مونده؛ الان تمدید کن که وقفه نیفته.` : "شارژت تموم شده."}</div>` : ""}</div>
+    <div style="margin-top:14px"><span class="label">پلن</span><div class="glass picks">${PLANS.map((x) => `<button type="button" class="pick${r.plan === x.id ? " on" : ""}" data-plan="${x.id}" aria-pressed="${r.plan === x.id}"><span class="dot t-lilac">${fa(x.months)}</span><span class="v"><b>${x.t}${x.note ? `<span class="note">${x.note}</span>` : ""}</b><small class="num">${toman(x.price)} تومان${x.months > 1 ? ` · ماهی ${toman(x.price / x.months)}` : ""}</small></span><span class="radio"></span></button>`).join("")}</div></div>
+    <div style="margin-top:14px"><span class="label">امکانات اضافه</span><div class="glass picks">${ADDONS.map((a) => { const on = r.add.includes(a.id); return `<button type="button" class="pick${on ? " on" : ""}" data-addon="${a.id}" aria-pressed="${on}"><span class="dot t-${a.id === "locker" ? "peach" : a.id === "coach" ? "lilac" : "mint"}">${ICON[a.i]}</span><span class="v"><b>${a.t}</b><small>${a.sub}</small></span><span class="chk">${ICON.ok}</span></button>`; }).join("")}</div></div>
+    <div style="margin-top:14px"><span class="label">شروع شارژ جدید</span><button class="input datebtn" type="button" data-act="startcal"><span class="ic">${ICON.cal}</span><span class="v"><span>${faDate(toDate(start))}</span><small>تا ${faDate(toDate(end))}</small></span><span class="chev">${ICON.chev}</span></button></div>
+    <div class="glass sum" style="padding:14px 16px;margin-top:12px">
+      <div class="row"><span class="hint">پلن ${p.t}</span><b class="num">${toman(p.price)}</b></div>
+      ${r.add.map((id) => { const a = ADDONS.find((x) => x.id === id); return `<div class="row"><span class="hint">${a.t}${a.monthly && p.months > 1 ? ` × ${fa(p.months)} ماه` : ""}</span><b class="num">${toman(a.monthly ? a.price * p.months : a.price)}</b></div>`; }).join("")}
+      <div class="row total"><b>مبلغ نهایی</b><span><span class="big num">${toman(renewTotal())}</span> <span class="hint">تومان</span></span></div></div>`;
+}
+function paySheet() {
+  ui.sheet = "pay";
+  const total = renewTotal(), canInst = total >= 3000000, part = Math.ceil(total / 4 / 1000) * 1000;
+  if (state.pay === "inst" && !canInst) state.pay = "card";
+  const opt = (v, ic, c, t, sub) => `<button type="button" class="pick${state.pay === v ? " on" : ""}" data-pay="${v}" aria-pressed="${state.pay === v}"><span class="dot t-${c}">${ICON[ic]}</span><span class="v"><b>${t}</b><small>${sub}</small></span><span class="radio"></span></button>`;
+  sheet(`<div class="cal-title"><b>پرداخت</b><span class="hint">مبلغ نهایی: <b class="num">${toman(total)}</b> تومان</span></div>
+    <div class="glass picks">${opt("card", "cardI", "lilac", "کارت بانکی", "درگاه امن شتاب · رسید همین‌جا میاد")}${canInst ? opt("inst", "instI", "sky", "۴ قسط بدون کارمزد", `امروز ${toman(part)} و سه قسط ماهانه`) : ""}</div>
+    <button class="btn" type="button" data-act="paynow" style="width:100%;padding:14px;margin-top:14px">پرداخت ${toman(state.pay === "inst" ? part : total)} تومان</button>
+    ${PREVIEW ? `<div class="hint" style="text-align:center;margin-top:8px">نسخه‌ی آزمایشی: پرداخت واقعی انجام نمی‌شه</div>` : ""}`);
+}
+function payNow() {
+  sheet(`<div class="pay-wait"><div class="spin"></div><b>در حال اتصال به درگاه بانک…</b><div class="hint">چند لحظه صبر کن</div></div>`);
+  setTimeout(applyRenew, 1400);
+}
+function done(title, sub) {
+  haptic("ok");
+  $("#app").innerHTML = `${topBar(title)}<div class="glass done"><div class="ok">${ICON.check}</div><b style="font-size:18px">${title}</b><div class="hint" style="margin-top:6px">${sub}${PREVIEW ? "<br>(نسخه‌ی آزمایشی: پرداخت واقعی انجام نشد)" : ""}</div></div>`;
+  // Telegram → app → back to Telegram: the app closes and the chat is there again.
+  if (IN_TG) setMain("برگشت به تلگرام", () => tg.close());
+  else setMain("صفحه‌ی اصلی", () => go("home"));
+}
+function applyRenew() {
+  const r = state.renew, p = planOf(r.plan), start = r.start || suggestedStart(), end = addMonths(start, p.months), total = renewTotal();
+  if (CAN_SEND) { try { tg.sendData(JSON.stringify({ type: "renew", plan: p.id, add: r.add, start, end, total })); } catch (e) {} }
+  const extras = r.add.map((id) => ADDONS.find((x) => x.id === id).t).join("، ");
+  state.member = { plan: p.id, end }; store.set("member", state.member);
+  state.renew = { plan: "3m", add: [], start: "" };
+  closeSheet();
+  done("شارژت تمدید شد!", `${p.t} · از ${faDate(toDate(start))} تا ${faDate(toDate(end))}${extras ? `<br>به‌اضافه‌ی ${extras}` : ""}<br>رسید پرداخت همین‌جا تو تلگرام میاد.`);
+}
+function workout() {
+  const di = state.wday, day = PROGRAM.days[di], fin = state.done["d" + di] || [];
+  return `${topBar("برنامه‌ی تمرین")}
+    <div class="glass row" style="padding:14px 16px"><span class="t-sky" style="width:46px;height:46px;border-radius:15px;display:grid;place-items:center;flex-shrink:0">${ICON.dumbI.replace("<svg ", '<svg width="30" height="30" ')}</span><div style="flex:1;min-width:0"><b>${PROGRAM.goal}</b><div class="hint">مربی: ${PROGRAM.coach} · ${fa(PROGRAM.days.length)} روز در هفته</div></div></div>
+    <div class="seg" style="margin-top:12px">${PROGRAM.days.map((d, i) => `<button type="button" data-wd="${i}" aria-pressed="${di === i}">${d.t}<small>${d.s}</small></button>`).join("")}</div>
+    <div class="row" style="margin-top:14px"><div class="bar" style="flex:1"><div style="width:${(fin.length / day.ex.length) * 100}%"></div></div><span class="hint num">${fa(fin.length)} از ${fa(day.ex.length)}</span></div>
+    <div class="glass" style="margin-top:10px">${day.ex.map((x, i) => { const on = fin.includes(i); return `<div class="ex${on ? " done" : ""}"><button class="ck" type="button" data-ex="${i}" aria-pressed="${on}" aria-label="انجام شد">${ICON.ok}</button><div class="v"><b>${x.n}</b><small>${fa(x.sets)} ست × ${x.reps}</small></div><button class="restbtn" type="button" data-rest="${x.rest}" aria-label="تایمر استراحت">${ICON.timerI}${fa(x.rest)} ثانیه</button></div>`; }).join("")}</div>
+    <details class="acc" style="margin-top:12px" data-drawer="dietOpen"${ui.dietOpen ? " open" : ""}><summary><span class="badge t-mint">${ICON.dietI}</span><div><b>تغذیه‌ی امروز</b><div class="hint">پیشنهاد کوتاه مربی</div></div><span class="chev">${ICON.chev}</span></summary>
+      <div class="hint" style="padding:12px 16px;line-height:1.9">صبحانه: جو دوسر با موز و یک قاشق کره‌ی بادام‌زمینی<br>قبل تمرین: یک لیوان آب و یه میوه<br>بعد تمرین: ۲۰۰ گرم مرغ یا ماهی با برنج و سالاد<br>آب: دست‌کم ۸ لیوان</div></details>
+    <details class="acc" style="margin-top:12px" data-drawer="reqOpen"${ui.reqOpen ? " open" : ""}><summary><span class="badge t-lilac">${ICON.coachI}</span><div><b>برنامه‌ی جدید بخواه</b><div class="hint">مربی تا ۲۴ ساعت برات می‌فرسته</div></div><span class="chev">${ICON.chev}</span></summary>
+      <div class="stack" style="padding:12px 14px"><div><span class="label">هدفت چیه؟</span><div class="seg">${[["loss", "کاهش وزن"], ["fit", "تناسب اندام"], ["muscle", "عضله‌سازی"]].map(([v, t]) => `<button type="button" data-goal="${v}" aria-pressed="${state.req.goal === v}">${t}</button>`).join("")}</div></div>
+        <div class="row"><span class="label" style="margin:0;flex:1">چند روز در هفته؟</span><span class="stp big"><button type="button" data-rd="-1" aria-label="یک روز کمتر">−</button><b class="num">${fa(state.req.days)}</b><button type="button" data-rd="1" aria-label="یک روز بیشتر">+</button></span></div>
+        <button class="btn" type="button" data-act="reqsend" style="padding:13px">ارسال برای مربی</button></div></details>`;
+}
+/* Rest timer: a small bar at the bottom counts down, then nudges you to the next set. */
+let restT = null;
+function stopRest() { clearInterval(restT); const el = $("#rest"); if (el) el.remove(); }
+function startRest(sec) {
+  stopRest(); let left = sec;
+  const el = document.createElement("div"); el.id = "rest"; el.className = "rest"; el.setAttribute("role", "timer"); document.body.appendChild(el);
+  const draw = () => { el.innerHTML = `${ICON.timerI}<span>استراحت</span><b class="num">${fa(left)}</b><button type="button" data-act="reststop">بستن</button>`; };
+  draw(); haptic("light");
+  restT = setInterval(() => { left -= 1; if (left <= 0) { stopRest(); haptic("ok"); toast("بریم ست بعدی!"); return; } draw(); }, 1000);
+}
+function search(q) {
+  const w = q.replace(/[؟?!.،,]/g, " ").split(/\s+/).filter((x) => x.length > 1);
+  return KB.map((it) => ({ it, s: w.reduce((n, x) => n + ((it.q + " " + it.k).includes(x) ? 2 : it.a.includes(x) ? 1 : 0), 0) }))
+    .filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 2).map((x) => x.it);
+}
+function ask() {
+  const q = state.ask.trim(), res = q ? search(q) : [];
+  return `${topBar("پرسش")}<form class="row" id="af"><input id="aq" class="input" value="${esc(state.ask)}" placeholder="سؤالت رو بنویس…" autocomplete="off" style="flex:1"><button class="btn" type="submit">بپرس</button></form>
+    <div class="stack" style="margin-top:12px">${q ? (res.length ? res.map((x) => `<div class="glass" style="padding:14px 16px;border-color:var(--lilac-line)"><b>${esc(x.q)}</b><div style="margin-top:4px">${esc(x.a)}</div></div>`).join("") : `<div class="glass" style="padding:14px 16px">جوابش رو پیدا نکردم؛ پذیرش کمکت می‌کنه.</div>`) : ""}
+      <div class="label" style="margin:4px 4px 0">سؤال‌های پرتکرار</div>
+      <div class="glass faq">${KB.map((x) => `<details><summary><span class="qm">؟</span><span>${esc(x.q)}</span><span class="chev">${ICON.chev}</span></summary><div class="ans">${esc(x.a)}</div></details>`).join("")}</div>
+      <div class="glass" style="padding:12px 16px"><div class="row"><span class="hint">تلفن پذیرش</span><b class="num" style="margin-inline-start:auto">${GYM.phone}</b><button class="btn soft" type="button" data-copy="02112345678">کپی</button></div></div></div>`;
+}
+
+/* ── render + actions ── */
+function mainFor(r) {
+  setMain("", null);
+  if (r === "renew") setMain(`پرداخت · ${toman(renewTotal())} تومان`, paySheet);
+}
+function render() {
+  const r = route();
+  $("#app").innerHTML = { home, classes, renew, workout, ask }[r]();
+  mainFor(r);
+  if (r !== "workout") stopRest();
+  if (r === "ask") $("#af").onsubmit = (e) => { e.preventDefault(); state.ask = $("#aq").value.trim(); render(); };
+}
+document.addEventListener("click", async (e) => {
+  const el = e.target.closest("button"); if (!el) return;
+  const d = el.dataset;
+  if (d.go) return go(d.go);
+  if (d.act === "back") return onBack();
+  if (d.act === "close") return closeSheet();
+  if (d.g) { state.g = d.g; store.set("g", d.g); haptic("light"); return render(); }
+  if (d.cday) { state.day = d.cday; haptic("light"); return calSheet(); }
+  if (d.sday) { state.renew.start = d.sday; haptic("light"); return calSheet(); }
+  if (d.nav) { ui.calM = Math.max(0, Math.min(1, ui.calM + Number(d.nav))); ui.calDir = Number(d.nav) > 0 ? "next" : "prev"; haptic("light"); return calSheet(); }
+  if (d.book) {
+    const [k, sid] = d.book.split("|"); state.bookings.push({ k, s: sid }); store.set("bookings", state.bookings); haptic("ok");
+    if (CAN_SEND) { try { tg.sendData(JSON.stringify({ type: "book", day: k, session: sid })); return; } catch (err) {} }
+    toast(`${CLASS[ses(sid).cls].t}، ${faDate(toDate(k))} ساعت ${ses(sid).at} رزرو شد`); return render();
+  }
+  if (d.unbook) { const [k, sid] = d.unbook.split("|"); state.bookings = state.bookings.filter((b) => !(b.k === k && b.s === sid)); store.set("bookings", state.bookings); haptic("light"); toast("رزرو لغو شد"); return render(); }
+  if (d.wait) { haptic("ok"); return toast("اسمت تو لیست انتظار ثبت شد؛ جا که باز شد خبرت می‌کنیم"); }
+  if (d.plan) { state.renew.plan = d.plan; haptic("light"); return render(); }
+  if (d.addon) { const a = state.renew.add; state.renew.add = a.includes(d.addon) ? a.filter((x) => x !== d.addon) : [...a, d.addon]; haptic("light"); return render(); }
+  if (d.pay) { state.pay = d.pay; haptic("light"); return paySheet(); }
+  if (d.wd !== undefined) { state.wday = Number(d.wd); haptic("light"); return render(); }
+  if (d.ex !== undefined) {
+    const key = "d" + state.wday, list = state.done[key] || [], i = Number(d.ex);
+    state.done[key] = list.includes(i) ? list.filter((x) => x !== i) : [...list, i]; store.set("done", state.done);
+    const all = state.done[key].length === PROGRAM.days[state.wday].ex.length;
+    haptic(all ? "ok" : "light"); if (all) toast("آفرین! تمرین امروز تموم شد"); return render();
+  }
+  if (d.rest) return startRest(Number(d.rest));
+  if (d.goal) { state.req.goal = d.goal; haptic("light"); return render(); }
+  if (d.rd) { state.req.days = Math.min(6, Math.max(2, state.req.days + Number(d.rd))); haptic("light"); return render(); }
+  if (d.copy) { try { await navigator.clipboard.writeText(d.copy); toast("کپی شد"); } catch (err) { toast(fa(d.copy)); } return; }
+  switch (d.act) {
+    case "qr": haptic("light"); return qrSheet();
+    case "cal": ui.cal = "class"; ui.calM = monthOffset(state.day || today()); haptic("light"); return calSheet();
+    case "startcal": ui.cal = "start"; ui.calM = monthOffset(state.renew.start || suggestedStart()); haptic("light"); return calSheet();
+    case "calok": haptic("ok"); closeSheet(); return render();
+    case "paynow": return payNow();
+    case "reststop": return stopRest();
+    case "reqsend": haptic("ok"); ui.reqOpen = false; toast("درخواستت برای مربی رفت؛ تا ۲۴ ساعت برنامه‌ی جدید همین‌جا میاد"); return render();
+    case "homescreen": if (IN_TG && tg.addToHomeScreen) tg.addToHomeScreen(); else toast("داخل تلگرام، آیکون باشگاه روی صفحه‌ی گوشی میاد."); return;
+  }
+});
+
+/* Swipe a calendar to change month (RTL: swipe right = next month). */
+let swipeX = null;
+document.addEventListener("touchstart", (e) => { swipeX = e.target.closest && e.target.closest(".cal") ? e.touches[0].clientX : null; }, { passive: true });
+document.addEventListener("touchend", (e) => {
+  if (swipeX === null) return;
+  const dx = e.changedTouches[0].clientX - swipeX; swipeX = null;
+  if (Math.abs(dx) < 50) return;
+  const b = document.querySelector(`.cal-head [data-nav="${dx > 0 ? 1 : -1}"]`);
+  if (b && !b.disabled) b.click();
+}, { passive: true });
+/* Inside Telegram: match the header to the page. */
+if (tg) { try { const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg1").trim(); tg.setHeaderColor(bg); tg.setBackgroundColor(bg); } catch (e) {} }
+render();
+</script>
+</body>
+</html>
