@@ -411,9 +411,15 @@ textarea.input { resize: none; line-height: 1.7; }
   --paper: #F8F6F3; --paper2: #F2EEE9; --line: #E6E1DA; --ink: #15181F; --ink2: #5A6070;
   --accent: #D9541E; --accent-2: #F0803F; --accent-soft: #FDF0E9; --accent-line: #F2CDB6; --accent-on: #FFFFFF;
 }
-/* the membership card, in the manner of a hotel key card */
-.mcard { background: linear-gradient(135deg, #1B2029, #2E3545) !important; border: 0 !important; color: #fff; }
-.mcard .v b, .mcard .v small { color: #fff; }
+/* the membership card: paper white with a warm edge, in the manner of a club card rather than a key card */
+.mcard { background: linear-gradient(135deg, #FFFFFF, var(--accent-soft)) !important;
+  border: 1px solid var(--accent-line) !important; color: var(--ink);
+  box-shadow: 0 10px 24px -14px rgba(217, 84, 30, .45) !important; }
+.mcard::after { background: rgba(217, 84, 30, .07) !important; }
+.mcard .v b { color: var(--ink); }
+.mcard .v small { color: var(--ink2); }
+.mcard .qr { background: #fff; border: 1px solid var(--accent-line); }
+.mcard .ring, .mcard .dial { color: var(--accent); }
 .pill.warn { background: #FDECEA; color: #B3261E; border-color: #F5C9C3; }
 /* ── the tour, full screen over the app (see _tour.js) ───────────────────────────────────────────────────────
    The hotel's manner: the picture fills the screen, an ink gradient at top and bottom so the writing can be
@@ -742,27 +748,29 @@ function qrSvg(seed, size) {
 
 /* ── gym data (sample; the owner changes it later) ── */
 /* The tour (see _tour.js). The hall is a real 360 photograph; the other stops are the club's own pictures,
-   each with the doors that lead on. When the club shoots its own 360 of a room, change that scene's kind. */
+   each with the doors that lead on. No free 360 of a club like this exists — the ones there are are tin sheds
+   and school halls — so every stop is one of the club's own rooms. The day the club shoots its own 360,
+   that scene's kind becomes "pano" and the file goes in pano/. */
 const TOUR = {
   title: "تور باشگاه",
   first: "hall",
   scenes: {
-    hall:    { kind: "pano",  src: "pano/hall.jpg", at: 0, name: "سالن اصلی", line: "دستگاه‌ها و فضای تمرین آزاد" },
+    hall:    { kind: "photo", src: "img/hero.jpg", name: "سالن دستگاه‌ها", line: "فضای روشن، پشت شیشه" },
     weights: { kind: "photo", src: "img/weights.jpg", name: "بخش وزنه", line: "دمبل و هالتر، از سبک تا سنگین" },
-    cardio:  { kind: "photo", src: "img/cardio.jpg", name: "هوازی", line: "تردمیل، الپتیکال و دوچرخه" },
-    classes: { kind: "photo", src: "img/pilates.jpg", name: "سالن کلاس‌ها", line: "پیلاتس، یوگا و TRX" },
-    coach:   { kind: "photo", src: "img/coach.jpg", name: "مربی خصوصی", line: "برنامه و همراهی یک‌به‌یک" },
+    cardio:  { kind: "photo", src: "img/cardio.jpg", name: "هوازی", line: "تردمیل و دوچرخه، رو به پنجره" },
+    pool:    { kind: "photo", src: "img/pool.jpg", name: "استخر", line: "سرپوشیده، آب گرم، شنای آزاد" },
+    sauna:   { kind: "photo", src: "img/sauna.jpg", name: "سونا", line: "بعد از تمرین، نیم ساعت برای خودت" },
+    lounge:  { kind: "photo", src: "img/lounge.jpg", name: "لانج", line: "نوشیدنی و استراحت، بعد از سونا" },
   },
   doors: {
-    hall:    [{ to: "weights", at: -60, label: "بخش وزنه" }, { to: "cardio", at: 70, label: "هوازی" }],
-    weights: [{ to: "coach", at: [26, 62], label: "مربی خصوصی" }, { to: "hall", at: [76, 62], label: "برگشت به سالن" }],
-    cardio:  [{ to: "classes", at: [28, 60], label: "سالن کلاس‌ها" }, { to: "hall", at: [74, 60], label: "برگشت به سالن" }],
-    classes: [{ to: "coach", at: [28, 62], label: "مربی خصوصی" }, { to: "hall", at: [74, 62], label: "برگشت به سالن" }],
-    coach:   [{ to: "hall", at: [50, 64], label: "برگشت به سالن" }],
+    hall:    [{ to: "weights", at: [27, 60], label: "بخش وزنه" }, { to: "cardio", at: [74, 60], label: "هوازی" }],
+    weights: [{ to: "pool", at: [27, 62], label: "استخر" }, { to: "hall", at: [74, 62], label: "برگشت به سالن" }],
+    cardio:  [{ to: "pool", at: [27, 60], label: "استخر" }, { to: "hall", at: [74, 60], label: "برگشت به سالن" }],
+    pool:    [{ to: "sauna", at: [27, 62], label: "سونا" }, { to: "hall", at: [74, 62], label: "برگشت به سالن" }],
+    sauna:   [{ to: "lounge", at: [27, 62], label: "لانج" }, { to: "hall", at: [74, 62], label: "برگشت به سالن" }],
+    lounge:  [{ to: "hall", at: [50, 64], label: "برگشت به سالن" }],
   },
-};
-
-const DASH = {
+};const DASH = {
   title: "داشبورد باشگاه",
   today: [[43, "بازدید امروز"], [9, "رزرو کلاس"], [21, "تبدیل", "٪"]],
   week: [18, 24, 21, 30, 27, 36, 43],
@@ -782,12 +790,12 @@ const WHEEL = {
 const GYM = { name: "باشگاه آرنیک", phone: "۰۶۱-۱۲۳۴۵۶۷۸", lockersFree: 4 };
 /* ph: the club's own photograph of that class (miniapps-src/photos.py builds them, all 2026, one grade). */
 const CLASS = {
-  pilates: { t: "پیلاتس", c: "mint", lvl: "همه‌ی سطوح", dur: 60, ph: "pilates" },
-  yoga: { t: "یوگا", c: "lilac", lvl: "مبتدی", dur: 60, ph: "pool" },
+  pilates: { t: "پیلاتس", c: "mint", lvl: "همه‌ی سطوح", dur: 60, ph: "lounge" },
+  yoga: { t: "یوگا", c: "lilac", lvl: "مبتدی", dur: 60, ph: "spa" },
   spin: { t: "اسپینینگ", c: "peach", lvl: "متوسط", dur: 45, ph: "cardio" },
   body: { t: "بادی‌پامپ", c: "sky", lvl: "همه‌ی سطوح", dur: 55, ph: "weights" },
-  hiit: { t: "HIIT", c: "peach", lvl: "پیشرفته", dur: 40, ph: "running" },
-  trx: { t: "TRX", c: "mint", lvl: "متوسط", dur: 50, ph: "coach" },
+  hiit: { t: "HIIT", c: "peach", lvl: "پیشرفته", dur: 40, ph: "cardio" },
+  trx: { t: "TRX", c: "mint", lvl: "متوسط", dur: 50, ph: "lobby" },
 };
 /* Weekly timetable: d = week days (0 = Saturday), g = f (women, 8 to 15) or m (men, 16 to 22). Fridays closed. */
 const SESSIONS = [
@@ -952,7 +960,7 @@ function home() {
     <div class="shelf">${Object.entries(CLASS).filter(([, c]) => c.ph).map(([id, c]) => `<button type="button" data-go="classes" aria-label="${esc(c.t)}"><img src="img/${c.ph}.jpg" alt="" loading="lazy"><span class="lbl"><b>${esc(c.t)}</b><small>${esc(c.lvl)} · ${fa(c.dur)} دقیقه</small></span></button>`).join("")}</div>
     <button class="w-open" type="button" data-act="wheel"><span class="ic">🎁</span><span class="v"><b>گردونه‌ی شانس</b><small>روزی یک بار بچرخان؛ جایزه‌ات همین‌جا</small></span><span class="chev">${ICON.chev}</span></button>
     <button class="d-open" type="button" data-act="dash"><span class="ic">${ICON.gridO}</span><span class="v"><b>داشبورد صاحب کسب‌وکار</b><small>چند نفر آمدند، چه دیدند، کجا برگشتند</small></span><span class="chev">${ICON.chev}</span></button>
-    <button class="t-open" type="button" data-act="tour"><img src="pano/hall-s.jpg" alt=""><span class="v"><b>تور مجازی باشگاه</b><small>سالن، وزنه، هوازی و کلاس‌ها — بدون اینکه از جایت بلند شوی</small></span><span class="go">${ICON.chev}</span></button>
+    <button class="t-open" type="button" data-act="tour"><img src="img/pool.jpg" alt=""><span class="v"><b>تور مجازی باشگاه</b><small>سالن، وزنه، هوازی، استخر، سونا و لانج — بدون اینکه از جایت بلند شوی</small></span><span class="go">${ICON.chev}</span></button>
     <div class="tiles">
       <button class="tile t-mint" type="button" data-go="classes"><span class="ring">${ICON.calO}</span><b>رزرو کلاس</b><span>${nb ? "بعدی: " + CLASS[ses(nb.s).cls].t : "پیلاتس، یوگا، اسپینینگ…"}</span></button>
       <button class="tile t-lilac" type="button" data-go="renew"><span class="ring">${ICON.renewO}</span><b>تمدید شارژ</b><span>${left <= 10 ? "وقت تمدیده!" : "پلن‌ها و کمد"}</span></button>
